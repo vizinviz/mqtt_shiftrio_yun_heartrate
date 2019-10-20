@@ -6,10 +6,13 @@ BridgeClient net;
 MQTTClient client;
 
 unsigned long lastMillis = 0;
+float theInterrupt = 0;
+int prevCount = 0;
+int counter = 0;
 
 void connect() {
   while (!client.connect("arduino-yun-vizinviz", "ecf929fe", "f65bde19d8e46d67")) {
-   
+
   }
 }
 
@@ -19,6 +22,8 @@ void setup() {
 
   client.begin("broker.shiftr.io", net);
   connect();
+
+  attachInterrupt(digitalPinToInterrupt(2), interrupt, RISING);//set interrupt 0,digital port 3
 }
 
 void loop() {
@@ -29,20 +34,29 @@ void loop() {
   }
 
   // publish a message roughly every second.
-  if (millis() - lastMillis > 2000) {
-    lastMillis = millis();
+  if (prevCount!=counter) {
+    prevCount = counter;
     //client.publish("/hello", "world");
     //client.publish("/velo", "moto");
-    String topic = "/temperature";
+    String topic = "/interrupt";
     String payload = "";
-    payload += random(20, 30);
+    payload += counter;
     digitalWrite(LED_BUILTIN, HIGH);
     client.publish(topic, payload);
-   
+
     delay(100);
     digitalWrite(LED_BUILTIN, LOW);
 
   }
 
+
+}
+
+/*Function: Interrupt service routine.Get the sigal from the external interrupt*/
+void interrupt()
+{
+
+  theInterrupt = millis();
+  counter++;
 
 }
